@@ -11,15 +11,18 @@ library QueryInterface {
     ) private view returns (uint256 success, uint256 result) {
         assembly {
             let offset := mload(0x40)
-            mstore(offset, ERC165_ID)
-            mstore(add(offset, 0x04), id)
+            mstore(offset, ERC165_ID)       // function selector
+            mstore(add(offset, 0x04), id)   // argument
             success := staticcall(30000, addr, offset, 0x24, offset, 0x20)
             result := mload(offset)
         }
     }
 
     function supportsERC165(address addr) public view returns (bool) {
-        (uint256 suc, uint256 res) = _supportsInterface(addr, ERC165_ID);
+        uint256 suc;
+        uint256 res;
+
+        (suc, res) = _supportsInterface(addr, ERC165_ID);
         if (suc == 0 || res == 0) return false;
 
         (suc, res) = _supportsInterface(addr, INVALID_ID);
