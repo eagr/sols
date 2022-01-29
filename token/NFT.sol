@@ -53,7 +53,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         return _operatorApprovals[owner][approvee];
     }
 
-    function approve(address approvee, uint256 tokenId) public virtual payable {
+    function approve(address approvee, uint256 tokenId) public virtual {
         require(approvee != address(0), "Attempted to approve zero address");
 
         address owner = ownerOf(tokenId);
@@ -116,7 +116,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public virtual payable {
+    ) public virtual {
         require(_isOwnerOrApprovee(msg.sender, tokenId), "Transfer initiated by unauthroized account");
         _transfer(from, to, tokenId);
         if (Address.isContract(to)) _detectOnERC721Received(from, to, tokenId, data);
@@ -126,11 +126,11 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual payable {
+    ) public virtual {
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) public virtual payable {
+    function transferFrom(address from, address to, uint256 tokenId) public virtual {
         require(_isOwnerOrApprovee(msg.sender, tokenId), "Transfer initiated by unauthroized account");
         _transfer(from, to, tokenId);
     }

@@ -17,13 +17,13 @@ interface ERC721 {
 
     function isApprovedForAll(address owner, address approvee) external view returns (bool);
 
-    function approve(address approvee, uint256 tokenId) external payable;
+    function approve(address approvee, uint256 tokenId) external;
 
     function getApproved(uint256 tokenId) external view returns (address);
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external payable;
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
 
-    function transferFrom(address from, address to, uint256 tokenId) external payable;
+    function transferFrom(address from, address to, uint256 tokenId) external;
 }
