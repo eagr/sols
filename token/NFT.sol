@@ -6,6 +6,7 @@ import "../interface/ERC721.sol";
 import "../interface/ERC721Metadata.sol";
 import "../interface/ERC721TokenReceiver.sol";
 import "../lib/Address.sol";
+import "../lib/Uint.sol";
 
 abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     mapping(address => uint256) private _balanceOf;
@@ -15,10 +16,12 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
 
     string private _name;
     string private _symbol;
+    string private _baseURI;
 
-    constructor(string memory name_, string memory symbol_) {
+    constructor(string memory name_, string memory symbol_, string memory baseURI_) {
         _name = name_;
         _symbol = symbol_;
+        _baseURI = baseURI_;
     }
 
     // ============ ERC165 ============
@@ -147,7 +150,8 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
 
     function tokenURI(uint256 tokenId) public view virtual returns (string memory) {
         require(ownerOf(tokenId) != address(0), "NFT: query URI for nonexistent token");
-        return "";
+        if (bytes(_baseURI).length == 0) return "";
+        return string(abi.encodePacked(_baseURI, Uint.toString(tokenId)));
     }
 
     // ============ Minting ============
