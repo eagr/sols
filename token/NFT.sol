@@ -32,19 +32,19 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     // ============ ERC721 ============
 
     function balanceOf(address account) public view virtual returns (uint256) {
-        require(account != address(0), "Queried balance for zero address");
+        require(account != address(0), "NFT: query balance for 0-addr");
         return _balanceOf[account];
     }
 
     function ownerOf(uint256 tokenId) public view virtual returns (address) {
         address owner = _ownerOf[tokenId];
-        require(owner != address(0), "Queried owner for nonexistent token");
+        require(owner != address(0), "NFT: query owner for nonexistent token");
         return owner;
     }
 
     function setApprovalForAll(address approvee, bool approved) public virtual {
-        require(approvee != address(0), "Attempted to approve zero address");
-        require(approvee != msg.sender, "Attempted to approve self");
+        require(approvee != address(0), "NFT: approve 0-addr");
+        require(approvee != msg.sender, "NFT: approve self");
         _operatorApprovals[msg.sender][approvee] = approved;
         emit ApprovalForAll(msg.sender, approvee, approved);
     }
@@ -54,13 +54,13 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function approve(address approvee, uint256 tokenId) public virtual {
-        require(approvee != address(0), "Attempted to approve zero address");
+        require(approvee != address(0), "NFT: approve 0-addr");
 
         address owner = ownerOf(tokenId);
-        require(approvee != owner, "Attempted to approve current owner");
+        require(approvee != owner, "NFT: approve owner");
         require(
             msg.sender == owner || isApprovedForAll(owner, msg.sender),
-            "Approval from unauthroized caller"
+            "NFT: unauthroized approval"
         );
 
         _tokenApprovals[tokenId] = approvee;
@@ -68,7 +68,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function getApproved(uint256 tokenId) public view virtual returns (address) {
-        require(ownerOf(tokenId) != address(0), "Queried approvee for nonexistent token");
+        require(ownerOf(tokenId) != address(0), "NFT: query approvee for nonexistent token");
         return _tokenApprovals[tokenId];
     }
 
@@ -78,8 +78,8 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function _transfer(address from, address to, uint256 tokenId) internal {
-        require(from == ownerOf(tokenId), "Attempted to transfer token from the wrong account");
-        require(to != address(0), "Attempted to transfer to zero address");
+        require(from == ownerOf(tokenId), "NFT: transfer from wrong account");
+        require(to != address(0), "NFT: transfer to 0-addr");
 
         _ownerOf[tokenId] = to;
         _balanceOf[from] -= 1;
@@ -98,11 +98,11 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         try ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 ret) {
             require(
                 ret == type(ERC721TokenReceiver).interfaceId,
-                "Attempted to transfer to non-ERC721TokenReceiver address"
+                "NFT: transfer to non-ERC721TokenReceiver addr"
             );
         } catch (bytes memory err) {
             if (err.length == 0) {
-                revert("Attempted to transfer to non-ERC721TokenReceiver address");
+                revert("NFT: transfer to non-ERC721TokenReceiver addr");
             } else {
                 assembly {
                     revert(add(0x20, err), mload(err))
@@ -117,7 +117,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         uint256 tokenId,
         bytes memory data
     ) public virtual {
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "Transfer initiated by unauthroized account");
+        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
         _transfer(from, to, tokenId);
         if (Address.isContract(to)) _detectOnERC721Received(from, to, tokenId, data);
     }
@@ -131,7 +131,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public virtual {
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "Transfer initiated by unauthroized account");
+        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
         _transfer(from, to, tokenId);
     }
 
@@ -146,7 +146,28 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function tokenURI(uint256 tokenId) public view virtual returns (string memory) {
-        require(ownerOf(tokenId) != address(0), "Queried URI for nonexistent token");
+        require(ownerOf(tokenId) != address(0), "NFT: query URI for nonexistent token");
         return "";
+    }
+
+    // ============ Minting ============
+
+    function mint(address to, uint256 tokenId) public virtual {
+        require(to != address(0), "NFT: mint to 0-addr");
+        require(ownerOf(tokenId) == address(0), "NFT: mint existing token");
+
+        _balanceOf[to] += 1;
+        _ownerOf[tokenId] = to;
+
+        emit Transfer(address(0), to, tokenId);
+    }
+
+    function safeMint(address to, uint256 tokenId, bytes memory data) public virtual {
+        mint(to, tokenId);
+        if (Address.isContract(to)) _detectOnERC721Received(address(0), to, tokenId, data);
+    }
+
+    function _safeMint(address to, uint256 tokenId) public virtual {
+        safeMint(to, tokenId, "");
     }
 }
