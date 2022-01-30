@@ -8,6 +8,10 @@ import "../interface/ERC721TokenReceiver.sol";
 import "../lib/Address.sol";
 import "../lib/Uint.sol";
 
+/**
+ * @notice minimal NFT contract served as the foundation to build upon
+ * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721
+ */
 abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     mapping(address => uint256) private _balanceOf;
     mapping(uint256 => address) private _ownerOf;
@@ -114,14 +118,18 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         }
     }
 
+    function transferFrom(address from, address to, uint256 tokenId) public virtual {
+        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
+        _transfer(from, to, tokenId);
+    }
+
     function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId,
         bytes memory data
     ) public virtual {
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
-        _transfer(from, to, tokenId);
+        transferFrom(from, to, tokenId);
         if (Address.isContract(to)) _detectOnERC721Received(from, to, tokenId, data);
     }
 
@@ -131,11 +139,6 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         uint256 tokenId
     ) public virtual {
         safeTransferFrom(from, to, tokenId, "");
-    }
-
-    function transferFrom(address from, address to, uint256 tokenId) public virtual {
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
-        _transfer(from, to, tokenId);
     }
 
     // ============ ERC721Metadata ============
