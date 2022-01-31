@@ -158,7 +158,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         return string(abi.encodePacked(_baseURI, Uint.toString(tokenId)));
     }
 
-    // ============ Minting ============
+    // ============ Minting & Burning ============
 
     function mint(address to, uint256 tokenId) public virtual {
         require(to != address(0), "NFT: mint to 0 addr");
@@ -177,5 +177,17 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
 
     function safeMint(address to, uint256 tokenId) public virtual {
         safeMint(to, tokenId, "");
+    }
+
+    function _burn(uint256 tokenId) internal virtual {
+        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized burn");
+
+        delete _ownerOf[tokenId];
+        address owner = ownerOf(tokenId);
+        _balanceOf[owner] -= 1;
+        emit Transfer(owner, address(0), tokenId);
+
+        delete _tokenApprovals[tokenId];
+        emit Approval(address(0), address(0), tokenId);
     }
 }
