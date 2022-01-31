@@ -39,7 +39,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     // ============ ERC721 ============
 
     function balanceOf(address account) public view virtual returns (uint256) {
-        require(account != address(0), "NFT: query balance for 0-addr");
+        require(account != address(0), "NFT: query balance for 0 addr");
         return _balanceOf[account];
     }
 
@@ -50,7 +50,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function setApprovalForAll(address approvee, bool approved) public virtual {
-        require(approvee != address(0), "NFT: approve 0-addr");
+        require(approvee != address(0), "NFT: approve 0 addr");
         require(approvee != msg.sender, "NFT: approve self");
         _operatorApprovals[msg.sender][approvee] = approved;
         emit ApprovalForAll(msg.sender, approvee, approved);
@@ -60,9 +60,8 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         return _operatorApprovals[owner][approvee];
     }
 
+    /// @dev zero address is allowed as `approvee` for burning
     function approve(address approvee, uint256 tokenId) public virtual {
-        require(approvee != address(0), "NFT: approve 0-addr");
-
         address owner = ownerOf(tokenId);
         require(approvee != owner, "NFT: approve owner");
         require(
@@ -79,20 +78,23 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         return _tokenApprovals[tokenId];
     }
 
-    function _isOwnerOrApprovee(address account, uint256 tokenId) internal view returns (bool) {
+    function _isOwnerOrApprovee(address account, uint256 tokenId) internal view virtual returns (bool) {
         address owner = ownerOf(tokenId);
         return account == owner || isApprovedForAll(owner, account) || account == getApproved(tokenId);
     }
 
-    function _transfer(address from, address to, uint256 tokenId) internal {
+    function _transfer(address from, address to, uint256 tokenId) internal virtual {
         require(from == ownerOf(tokenId), "NFT: transfer from wrong account");
-        require(to != address(0), "NFT: transfer to 0-addr");
+        require(from != to, "NFT: transfer to self");
+        require(to != address(0), "NFT: transfer to 0 addr");
+        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
 
         _ownerOf[tokenId] = to;
         _balanceOf[from] -= 1;
         _balanceOf[to] += 1;
-        _tokenApprovals[tokenId] = address(0);
 
+        _tokenApprovals[tokenId] = address(0);
+        emit Approval(to, address(0), tokenId);
         emit Transfer(from, to, tokenId);
     }
 
@@ -101,7 +103,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) private {
+    ) internal virtual {
         try ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 ret) {
             require(
                 ret == type(ERC721TokenReceiver).interfaceId,
@@ -119,7 +121,6 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public virtual {
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
         _transfer(from, to, tokenId);
     }
 
@@ -160,7 +161,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     // ============ Minting ============
 
     function mint(address to, uint256 tokenId) public virtual {
-        require(to != address(0), "NFT: mint to 0-addr");
+        require(to != address(0), "NFT: mint to 0 addr");
         require(ownerOf(tokenId) == address(0), "NFT: mint existing token");
 
         _balanceOf[to] += 1;
@@ -174,7 +175,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         if (Address.isContract(to)) _detectOnERC721Received(address(0), to, tokenId, data);
     }
 
-    function _safeMint(address to, uint256 tokenId) public virtual {
+    function safeMint(address to, uint256 tokenId) public virtual {
         safeMint(to, tokenId, "");
     }
 }
