@@ -25,7 +25,7 @@ abstract contract NFTRoyalty is NFT, ERC2981 {
     }
 
     function _setDefault(address receiver, uint8 percentage) internal virtual {
-        require(receiver != address(0), "NFTRoyalty: set default receiver to 0 addr");
+        require(receiver != address(0), "NFTRoyalty: set default receiver to null addr");
         require(percentage <= _maxPercentage, "NFTRoyalty: default royalty fee exceeds maximum");
         _defaultRoyaltyInfo = RoyaltyInfo(receiver, percentage);
     }
@@ -39,7 +39,7 @@ abstract contract NFTRoyalty is NFT, ERC2981 {
         address receiver,
         uint8 percentage
     ) internal virtual {
-        require(receiver != address(0), "NFTRoyalty: set receiver to 0 addr");
+        require(receiver != address(0), "NFTRoyalty: set receiver to null addr");
         require(percentage <= _maxPercentage, "NFTRoyalty: royalty fee exceeds maximum");
         _royaltyOf[tokenId] = RoyaltyInfo(receiver, percentage);
     }

@@ -5,6 +5,7 @@ import "../interface/ERC165.sol";
 import "../interface/ERC721.sol";
 import "../interface/ERC721Metadata.sol";
 import "../interface/ERC721TokenReceiver.sol";
+import "../meta/GSNAware.sol";
 import "../lib/Address.sol";
 import "../lib/Uint.sol";
 
@@ -12,7 +13,7 @@ import "../lib/Uint.sol";
  * @notice minimal NFT contract served as the foundation to build upon
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721
  */
-abstract contract NFT is ERC165, ERC721, ERC721Metadata {
+abstract contract NFT is ERC165, ERC721, ERC721Metadata, GSNAware {
     mapping(address => uint256) private _balanceOf;
     mapping(uint256 => address) private _ownerOf;
     mapping(address => mapping(address => bool)) private _operatorApprovals;
@@ -39,7 +40,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     // ============ ERC721 ============
 
     function balanceOf(address account) public view virtual returns (uint256) {
-        require(account != address(0), "NFT: query balance for 0 addr");
+        require(account != address(0), "NFT: query balance for null addr");
         return _balanceOf[account];
     }
 
@@ -50,10 +51,12 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function setApprovalForAll(address approvee, bool approved) public virtual {
-        require(approvee != address(0), "NFT: approve 0 addr");
-        require(approvee != msg.sender, "NFT: approve self");
-        _operatorApprovals[msg.sender][approvee] = approved;
-        emit ApprovalForAll(msg.sender, approvee, approved);
+        require(approvee != address(0), "NFT: approve null addr");
+
+        address sender = _msgSender();
+        require(approvee != sender, "NFT: approve self");
+        _operatorApprovals[sender][approvee] = approved;
+        emit ApprovalForAll(sender, approvee, approved);
     }
 
     function isApprovedForAll(address owner, address approvee) public view virtual returns (bool) {
@@ -65,7 +68,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         address owner = ownerOf(tokenId);
         require(approvee != owner, "NFT: approve owner");
         require(
-            msg.sender == owner || isApprovedForAll(owner, msg.sender),
+            _msgSender() == owner || isApprovedForAll(owner, _msgSender()),
             "NFT: unauthroized approval"
         );
 
@@ -86,8 +89,8 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     function _transfer(address from, address to, uint256 tokenId) internal virtual {
         require(from == ownerOf(tokenId), "NFT: transfer from wrong account");
         require(from != to, "NFT: transfer to self");
-        require(to != address(0), "NFT: transfer to 0 addr");
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized transfer");
+        require(to != address(0), "NFT: transfer to null addr");
+        require(_isOwnerOrApprovee(_msgSender(), tokenId), "NFT: unauthroized transfer");
 
         _ownerOf[tokenId] = to;
         _balanceOf[from] -= 1;
@@ -104,7 +107,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
         uint256 tokenId,
         bytes memory data
     ) internal virtual {
-        try ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 ret) {
+        try ERC721TokenReceiver(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 ret) {
             require(
                 ret == type(ERC721TokenReceiver).interfaceId,
                 "NFT: transfer to non-ERC721TokenReceiver addr"
@@ -161,7 +164,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     // ============ Minting & Burning ============
 
     function mint(address to, uint256 tokenId) public virtual {
-        require(to != address(0), "NFT: mint to 0 addr");
+        require(to != address(0), "NFT: mint to null addr");
         require(ownerOf(tokenId) == address(0), "NFT: mint existing token");
 
         _balanceOf[to] += 1;
@@ -180,7 +183,7 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata {
     }
 
     function _burn(uint256 tokenId) internal virtual {
-        require(_isOwnerOrApprovee(msg.sender, tokenId), "NFT: unauthroized burn");
+        require(_isOwnerOrApprovee(_msgSender(), tokenId), "NFT: unauthroized burn");
 
         delete _ownerOf[tokenId];
         address owner = ownerOf(tokenId);
