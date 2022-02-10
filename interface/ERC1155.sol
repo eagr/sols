@@ -8,7 +8,7 @@ interface ERC1155 {
 
     event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] tokenTypes, uint256[] amounts);
 
-    event ApprovalForAll(address indexed owner, address indexed approvee, bool approved);
+    event ApprovalForAll(address indexed approver, address indexed approvee, bool approved);
 
     event URI(string uri, uint256 indexed id);
 
