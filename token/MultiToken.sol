@@ -39,8 +39,8 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
     }
 
     function balanceOfBatch(
-        address[] calldata accounts,
-        uint256[] calldata tokenTypes
+        address[] memory accounts,
+        uint256[] memory tokenTypes
     ) external view returns (uint256[] memory) {
         require(accounts.length == tokenTypes.length, "MultiToken: accounts-tokenTypes length mismatch");
 
@@ -68,7 +68,7 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
         address to,
         uint256 tokenType,
         uint256 amount,
-        bytes calldata data
+        bytes memory data
     ) private {
         if (to.isContract()) {
             try ERC1155TokenReceiver(to).onERC1155Received(
@@ -90,9 +90,9 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
         address operator,
         address from,
         address to,
-        uint256[] calldata tokenTypes,
-        uint256[] calldata amounts,
-        bytes calldata data
+        uint256[] memory tokenTypes,
+        uint256[] memory amounts,
+        bytes memory data
     ) private {
         if (to.isContract()) {
             try ERC1155TokenReceiver(to).onERC1155BatchReceived(
@@ -115,7 +115,7 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
         address to,
         uint256 tokenType,
         uint256 amount,
-        bytes calldata data
+        bytes memory data
     ) public virtual {
         address operator = _msgSender();
 
@@ -136,9 +136,9 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
     function safeBatchTransferFrom(
         address from,
         address to,
-        uint256[] calldata tokenTypes,
-        uint256[] calldata amounts,
-        bytes calldata data
+        uint256[] memory tokenTypes,
+        uint256[] memory amounts,
+        bytes memory data
     ) public virtual {
         address operator = _msgSender();
 
@@ -179,7 +179,7 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
         address to,
         uint256 tokenType,
         uint256 amount,
-        bytes calldata data
+        bytes memory data
     ) internal virtual {
         require(to != address(0), "MultiToken: mint to null addr");
 
@@ -190,9 +190,9 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
 
     function _safeBatchMint(
         address to,
-        uint256[] calldata tokenTypes,
-        uint256[] calldata amounts,
-        bytes calldata data
+        uint256[] memory tokenTypes,
+        uint256[] memory amounts,
+        bytes memory data
     ) internal virtual {
         require(to != address(0), "MultiToken: mint to null addr");
         require(tokenTypes.length == amounts.length, "MultiToken: tokenTypes-amounts length mismatch");
@@ -223,8 +223,8 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
 
     function _batchBurn(
         address from,
-        uint256[] calldata tokenTypes,
-        uint256[] calldata amounts
+        uint256[] memory tokenTypes,
+        uint256[] memory amounts
     ) internal virtual {
         address operator = _msgSender();
         require(from != address(0), "MultiToken: burn from null addr");
