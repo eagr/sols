@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./NFT.sol";
-import "../interface/ERC165.sol";
 import "../interface/ERC2981.sol";
 
 /**
@@ -65,7 +64,7 @@ abstract contract NFTRoyalty is NFT, ERC2981 {
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public pure virtual override(NFT, ERC165) returns (bool) {
+    ) public view virtual override(ERC165, NFT) returns (bool) {
         return interfaceId == type(ERC2981).interfaceId
             || super.supportsInterface(interfaceId);
     }

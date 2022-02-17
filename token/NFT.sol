@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../interface/ERC165.sol";
 import "../interface/ERC721.sol";
 import "../interface/ERC721Metadata.sol";
 import "../interface/ERC721TokenReceiver.sol";
+import "../meta/Queryable.sol";
 import "../meta/GSNAware.sol";
 import "../lib/Address.sol";
 import "../lib/Uint.sol";
@@ -13,7 +13,7 @@ import "../lib/Uint.sol";
  * @notice minimal NFT contract served as the foundation to build upon
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721
  */
-abstract contract NFT is ERC165, ERC721, ERC721Metadata, GSNAware {
+abstract contract NFT is ERC721, ERC721Metadata, Queryable, GSNAware {
     mapping(address => uint256) private _balanceOf;
     mapping(uint256 => address) private _ownerOf;
     mapping(address => mapping(address => bool)) private _operatorApprovals;
@@ -29,12 +29,10 @@ abstract contract NFT is ERC165, ERC721, ERC721Metadata, GSNAware {
         _baseURI = baseURI_;
     }
 
-    // ============ ERC165 ============
-
-    function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool) {
-        return interfaceId == type(ERC165).interfaceId
-            || interfaceId == type(ERC721).interfaceId
-            || interfaceId == type(ERC721Metadata).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(ERC721).interfaceId
+            || interfaceId == type(ERC721Metadata).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     // ============ ERC721 ============

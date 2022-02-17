@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../interface/ERC165.sol";
 import "../interface/ERC1155.sol";
 import "../interface/ERC1155MetadataURI.sol";
 import "../interface/ERC1155TokenReceiver.sol";
+import "../meta/Queryable.sol";
 import "../meta/GSNAware.sol";
 import "../lib/Address.sol";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-1155
  */
-abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
+abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware {
     using Address for address;
 
     mapping(uint256 => mapping(address => uint256)) private _balances;
@@ -23,12 +23,10 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
         _setURI(uri_);
     }
 
-    // ============ ERC165 ============
-
-    function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool) {
-        return interfaceId == type(ERC165).interfaceId
-            || interfaceId == type(ERC1155).interfaceId
-            || interfaceId == type(ERC1155MetadataURI).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(ERC1155).interfaceId
+            || interfaceId == type(ERC1155MetadataURI).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     // ============ ERC1155 ============
@@ -169,7 +167,7 @@ abstract contract MultiToken is ERC165, ERC1155, ERC1155MetadataURI, GSNAware {
         _uri = uri_;
     }
 
-    function uri(uint256) public view virtual returns (string memory) {
+    function uri() public view virtual returns (string memory) {
         return _uri;
     }
 
