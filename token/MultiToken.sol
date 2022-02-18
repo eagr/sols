@@ -251,13 +251,10 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         uint256 tokenType,
         uint256 amount
     ) internal virtual {
-        address operator = _msgSender();
         require(from != address(0), "MultiToken: burn from null addr");
-        require(
-            from == operator || isApprovedForAll(from, operator),
-            "MultiToken: unauthroized burn"
-        );
         require(balanceOf(from, tokenType) >= amount, "MultiToken: burn amount exceeds balance");
+
+        address operator = _msgSender();
 
         _beforeTokenTransfer(operator, from, address(0), _toArray(tokenType), _toArray(amount), "");
         _balances[tokenType][from] -= amount;
@@ -269,13 +266,10 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         uint256[] memory tokenTypes,
         uint256[] memory amounts
     ) internal virtual {
-        address operator = _msgSender();
         require(from != address(0), "MultiToken: burn from null addr");
-        require(
-            from == operator || isApprovedForAll(from, operator),
-            "MultiToken: unauthroized burn"
-        );
         require(tokenTypes.length == amounts.length, "MultiToken: tokenTypes-amounts length mismatch");
+
+        address operator = _msgSender();
 
         _beforeTokenTransfer(operator, from, address(0), tokenTypes, amounts, "");
         for (uint256 i = 0; i < tokenTypes.length; i++) {
