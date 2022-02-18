@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @dev See https://eips.ethereum.org/EIPS/eip-1155
-/// Note: The ERC-165 identifier for this interface is 0xd9b67a26.
+/**
+ * @dev See https://eips.ethereum.org/EIPS/eip-1155
+ *  Note: The ERC-165 identifier for this interface is 0xd9b67a26.
+ */
 interface ERC1155 {
     event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 tokenType, uint256 amount);
 

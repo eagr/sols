@@ -13,7 +13,7 @@ contract ProxyRegistry {
 
 /**
  * @notice Opnionated ERC-1155 contract made compatible specifically to OpenSea
- * @dev Fungible token id starts from 0, while non-fungible starts from 1000000
+ *  Fungible token id starts from 0, while non-fungible starts from 1000000.
  */
 abstract contract MultiTokenTradable is MultiToken, RoleBased {
     using Uint for uint256;
@@ -91,7 +91,6 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased {
 
     // ============ create & mint ============
 
-    /// @dev creator = first minter
     function _create(
         address initOwner,
         uint256 tokenId,

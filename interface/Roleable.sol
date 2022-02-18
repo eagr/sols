@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @dev Based on https://docs.openzeppelin.com/contracts/4.x/api/access#IAccessControl
+/// @dev See https://docs.openzeppelin.com/contracts/4.x/api/access#IAccessControl
 interface Roleable {
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousRoleAdmin, bytes32 indexed newRoleAdmin);
 

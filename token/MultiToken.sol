@@ -9,7 +9,7 @@ import "../meta/GSNAware.sol";
 import "../lib/Address.sol";
 
 /**
- * @dev Implementation of https://eips.ethereum.org/EIPS/eip-1155
+ * @notice Implementation of ERC-1155
  */
 abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware {
     using Address for address;
@@ -67,7 +67,7 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
     }
 
     /**
-     * @dev Hook to make writing transfer-related extensions easy.
+     * @dev A hook to make writing transaction-related extensions easier
      */
     function _beforeTokenTransfer(
         address operator,

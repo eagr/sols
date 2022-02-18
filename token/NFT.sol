@@ -10,8 +10,7 @@ import "../lib/Address.sol";
 import "../lib/Uint.sol";
 
 /**
- * @notice minimal NFT contract served as the foundation to build upon
- * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721
+ * @notice Implementation of ERC-721
  */
 abstract contract NFT is ERC721, ERC721Metadata, Queryable, GSNAware {
     mapping(address => uint256) private _balanceOf;
@@ -61,7 +60,9 @@ abstract contract NFT is ERC721, ERC721Metadata, Queryable, GSNAware {
         return _operatorApprovals[owner][approvee];
     }
 
-    /// @dev zero address is allowed as `approvee` for burning
+    /**
+     * @dev Null address is allowed as `approvee` for burning.
+     */
     function approve(address approvee, uint256 tokenId) public virtual {
         address owner = ownerOf(tokenId);
         require(approvee != owner, "NFT: approve owner");
