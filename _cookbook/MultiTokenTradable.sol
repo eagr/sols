@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../token/MultiToken.sol";
 import "../permission/RoleBased.sol";
+import "../security/Pausable.sol";
 import "../lib/Uint.sol";
 
 contract OwnableDelegateProxy { }
@@ -15,7 +16,7 @@ contract ProxyRegistry {
  * @notice Opnionated ERC-1155 contract made compatible specifically to OpenSea
  *  Fungible token id starts from 0, while non-fungible starts from 1000000.
  */
-abstract contract MultiTokenTradable is MultiToken, RoleBased {
+abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable {
     using Uint for uint256;
 
     bytes32 public constant GOD = keccak256("ROLE_GOD");
@@ -144,5 +145,26 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _supplies[tokenIds[i]] += amounts[i];
         }
+    }
+
+    // ============ emergency ============
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory tokenIds,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override whenNotPaused {
+        super._beforeTokenTransfer(operator, from, to, tokenIds, amounts, data);
+    }
+
+    function pause() public virtual onlyRole(GOD) {
+        _pause();
+    }
+
+    function unpause() public virtual onlyRole(GOD) {
+        _unpause();
     }
 }
