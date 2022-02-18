@@ -108,6 +108,23 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         }
     }
 
+    function _safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenType,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual {
+        require(to != address(0), "MultiToken: transfer to null addr");
+        require(balanceOf(from, tokenType) >= amount, "MultiToken: insufficient balance");
+
+        _balances[tokenType][from] -= amount;
+        _balances[tokenType][to] += amount;
+        emit TransferSingle(_msgSender(), from, to, tokenType, amount);
+
+        _detectOnERC1155Received(_msgSender(), from, to, tokenType, amount, data);
+    }
+
     function safeTransferFrom(
         address from,
         address to,
@@ -115,35 +132,20 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         uint256 amount,
         bytes memory data
     ) public virtual {
-        address operator = _msgSender();
-
         require(
-            from == operator || isApprovedForAll(from, operator),
+            from == _msgSender() || isApprovedForAll(from, _msgSender()),
             "MultiToken: unauthroized transfer"
         );
-        require(to != address(0), "MultiToken: transfer to null addr");
-        require(balanceOf(from, tokenType) >= amount, "MultiToken: insufficient balance");
-
-        _balances[tokenType][from] -= amount;
-        _balances[tokenType][to] += amount;
-        emit TransferSingle(operator, from, to, tokenType, amount);
-
-        _detectOnERC1155Received(operator, from, to, tokenType, amount, data);
+        _safeTransferFrom(from, to, tokenType, amount, data);
     }
 
-    function safeBatchTransferFrom(
+    function _safeBatchTransferFrom(
         address from,
         address to,
         uint256[] memory tokenTypes,
         uint256[] memory amounts,
         bytes memory data
     ) public virtual {
-        address operator = _msgSender();
-
-        require(
-            from == operator || isApprovedForAll(from, operator),
-            "MultiToken: unauthroized transfer"
-        );
         require(to != address(0), "MultiToken: transfer to nulll addr");
         require(tokenTypes.length == amounts.length, "MultiToken: tokenTypes-amounts length mismatch");
 
@@ -156,9 +158,23 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
             _balances[tokenType][from] -= amount;
             _balances[tokenType][to] += amount;
         }
-        emit TransferBatch(operator, from, to, tokenTypes, amounts);
+        emit TransferBatch(_msgSender(), from, to, tokenTypes, amounts);
 
-        _detectOnERC1155BatchReceived(operator, from, to, tokenTypes, amounts, data);
+        _detectOnERC1155BatchReceived(_msgSender(), from, to, tokenTypes, amounts, data);
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory tokenTypes,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public virtual {
+        require(
+            from == _msgSender() || isApprovedForAll(from, _msgSender()),
+            "MultiToken: unauthroized transfer"
+        );
+        _safeBatchTransferFrom(from, to, tokenTypes, amounts, data);
     }
 
     // ============ ERC1155MetadataURI ============
