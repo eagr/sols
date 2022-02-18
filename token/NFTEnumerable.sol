@@ -11,7 +11,7 @@ abstract contract NFTEnumerable is NFT, ERC721Enumerable {
     mapping(uint256 => uint256) private _tokenIndicesOfOwner;
     mapping(address => uint256[]) private _tokensOfOwner;
 
-    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(ERC721Enumerable).interfaceId
             || super.supportsInterface(interfaceId);
     }
