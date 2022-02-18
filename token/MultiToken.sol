@@ -60,6 +60,24 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         return _approvals[owner][approvee];
     }
 
+    function _toArray(uint256 elem) private pure returns (uint256[] memory) {
+        uint256[] memory arr = new uint256[](1);
+        arr[0] = elem;
+        return arr;
+    }
+
+    /**
+     * @dev Hook to make writing transfer-related extensions easy.
+     */
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory tokenTypes,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual { }
+
     function _detectOnERC1155Received(
         address operator,
         address from,
@@ -118,11 +136,13 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         require(to != address(0), "MultiToken: transfer to null addr");
         require(balanceOf(from, tokenType) >= amount, "MultiToken: insufficient balance");
 
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, from, to, _toArray(tokenType), _toArray(amount), data);
         _balances[tokenType][from] -= amount;
         _balances[tokenType][to] += amount;
-        emit TransferSingle(_msgSender(), from, to, tokenType, amount);
-
-        _detectOnERC1155Received(_msgSender(), from, to, tokenType, amount, data);
+        emit TransferSingle(operator, from, to, tokenType, amount);
+        _detectOnERC1155Received(operator, from, to, tokenType, amount, data);
     }
 
     function safeTransferFrom(
@@ -149,6 +169,9 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         require(to != address(0), "MultiToken: transfer to nulll addr");
         require(tokenTypes.length == amounts.length, "MultiToken: tokenTypes-amounts length mismatch");
 
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, from, to, tokenTypes, amounts, data);
         for (uint256 i = 0; i < tokenTypes.length; i++) {
             uint256 tokenType = tokenTypes[i];
             uint256 amount = amounts[i];
@@ -158,9 +181,8 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
             _balances[tokenType][from] -= amount;
             _balances[tokenType][to] += amount;
         }
-        emit TransferBatch(_msgSender(), from, to, tokenTypes, amounts);
-
-        _detectOnERC1155BatchReceived(_msgSender(), from, to, tokenTypes, amounts, data);
+        emit TransferBatch(operator, from, to, tokenTypes, amounts);
+        _detectOnERC1155BatchReceived(operator, from, to, tokenTypes, amounts, data);
     }
 
     function safeBatchTransferFrom(
@@ -197,9 +219,12 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
     ) internal virtual {
         require(to != address(0), "MultiToken: mint to null addr");
 
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, address(0), to, _toArray(tokenType), _toArray(amount), data);
         _balances[tokenType][to] += amount;
-        emit TransferSingle(_msgSender(), address(0), to, tokenType, amount);
-        _detectOnERC1155Received(_msgSender(), address(0), to, tokenType, amount, data);
+        emit TransferSingle(operator, address(0), to, tokenType, amount);
+        _detectOnERC1155Received(operator, address(0), to, tokenType, amount, data);
     }
 
     function _safeBatchMint(
@@ -211,11 +236,14 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         require(to != address(0), "MultiToken: mint to null addr");
         require(tokenTypes.length == amounts.length, "MultiToken: tokenTypes-amounts length mismatch");
 
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, address(0), to, tokenTypes, amounts, data);
         for (uint256 i = 0; i < tokenTypes.length; i++) {
             _balances[tokenTypes[i]][to] += amounts[i];
         }
-        emit TransferBatch(_msgSender(), address(0), to, tokenTypes, amounts);
-        _detectOnERC1155BatchReceived(_msgSender(), address(0), to, tokenTypes, amounts, data);
+        emit TransferBatch(operator, address(0), to, tokenTypes, amounts);
+        _detectOnERC1155BatchReceived(operator, address(0), to, tokenTypes, amounts, data);
     }
 
     function _burn(
@@ -231,6 +259,7 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         );
         require(balanceOf(from, tokenType) >= amount, "MultiToken: burn amount exceeds balance");
 
+        _beforeTokenTransfer(operator, from, address(0), _toArray(tokenType), _toArray(amount), "");
         _balances[tokenType][from] -= amount;
         emit TransferSingle(operator, from, address(0), tokenType, amount);
     }
@@ -248,6 +277,7 @@ abstract contract MultiToken is ERC1155, ERC1155MetadataURI, Queryable, GSNAware
         );
         require(tokenTypes.length == amounts.length, "MultiToken: tokenTypes-amounts length mismatch");
 
+        _beforeTokenTransfer(operator, from, address(0), tokenTypes, amounts, "");
         for (uint256 i = 0; i < tokenTypes.length; i++) {
             require(
                 balanceOf(from, tokenTypes[i]) >= amounts[i],
