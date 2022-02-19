@@ -4,19 +4,14 @@ pragma solidity ^0.8.0;
 import "../token/MultiToken.sol";
 import "../permission/RoleBased.sol";
 import "../security/Pausable.sol";
+import "../trade/OpenSeaInteroperable.sol";
 import "../lib/Uint.sol";
 
-contract OwnableDelegateProxy { }
-
-contract ProxyRegistry {
-    mapping(address => OwnableDelegateProxy) public proxies;
-}
-
 /**
- * @notice Opnionated ERC-1155 contract made compatible specifically to OpenSea
+ * @notice Cutromized ERC-1155 contract made compatible specifically to OpenSea
  *  Fungible token id starts from 0, while non-fungible starts from 1000000.
  */
-abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable {
+abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSeaInteroperable {
     using Uint for uint256;
 
     bytes32 public constant GOD = keccak256("ROLE_GOD");
@@ -24,22 +19,21 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable {
     bytes32 public constant MINTER = keccak256("ROLE_MINTER");
 
     string private _name;
-    address proxyRegistryAddress;
 
-    // reserve the first 1M for fungible token ids
     uint256 private _currentFungibleId = 0;
     uint256 private _currentNonFungibleId = 1000000;
 
-    mapping(uint256 => address) private _creators;
     mapping(uint256 => uint256) private _supplies;
 
     constructor(
         string memory name_,
+        string memory contractURI_,
         string memory metadataURI,
-        address proxyRegistryAddress_
+        address proxyRegistry_
     ) MultiToken(metadataURI) {
-        _name = name_;
-        proxyRegistryAddress = proxyRegistryAddress_;
+        _setName(name_);
+        _setContractURI(contractURI_);
+        _setProxyRegistry(proxyRegistry_);
 
         address sender = _msgSender();
         _grantRole(GOD, sender);
@@ -60,19 +54,11 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable {
         address owner,
         address approvee
     ) public view virtual override returns (bool) {
-        // Whitelist OpenSea proxy contract for easy trading
-        ProxyRegistry registry = ProxyRegistry(proxyRegistryAddress);
-        if (approvee == address(registry.proxies(owner))) {
-            return true;
-        }
-        return super.isApprovedForAll(owner, approvee);
+        return _isOpenSeaProxy(owner, approvee)
+            || super.isApprovedForAll(owner, approvee);
     }
 
     // ============ metadata ============
-
-    function name() public view returns (string memory) {
-        return _name;
-    }
 
     function totalSupply(uint256 tokenId) public view virtual returns (uint256) {
         return _supplies[tokenId];
@@ -97,10 +83,10 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable {
         uint256 tokenId,
         uint256 initSupply,
         bytes memory data
-    ) public virtual returns (uint256) {
+    ) internal virtual returns (uint256) {
         _safeMint(initOwner, tokenId, initSupply, data);
-        _creators[tokenId] = initOwner;
         _supplies[tokenId] = initSupply;
+        _createToken(initOwner, tokenId);
 
         emit URI(uri(tokenId), tokenId);
         return tokenId;
@@ -109,15 +95,15 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable {
     function createFungible(
         uint256 initSupply,
         bytes memory data
-    ) public virtual onlyRole(CREATOR) {
-        _create(_msgSender(), _currentFungibleId++, initSupply, data);
+    ) public virtual onlyRole(CREATOR) returns (uint256) {
+        return _create(_msgSender(), _currentFungibleId++, initSupply, data);
     }
 
     function createNonFungible(
         address initOwner,
         bytes memory data
-    ) public virtual onlyRole(CREATOR) {
-        _create(initOwner, _currentNonFungibleId++, 1, data);
+    ) public virtual onlyRole(CREATOR) returns (uint256) {
+        return _create(initOwner, _currentNonFungibleId++, 1, data);
     }
 
     function mint(
