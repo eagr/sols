@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../token/MultiToken.sol";
+import "../token/MultiTokenSupply.sol";
 import "../permission/RoleBased.sol";
 import "../security/Pausable.sol";
 import "../trade/OpenSeaInteroperable.sol";
@@ -11,7 +11,7 @@ import "../lib/Uint.sol";
  * @notice Cutromized ERC-1155 contract made compatible specifically to OpenSea
  *  Fungible token id starts from 0, while non-fungible starts from 1000000.
  */
-abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSeaInteroperable {
+abstract contract MultiTokenTradable is MultiTokenSupply, RoleBased, Pausable, OpenSeaInteroperable {
     using Uint for uint256;
 
     bytes32 public constant GOD = keccak256("ROLE_GOD");
@@ -22,8 +22,6 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSea
 
     uint256 private _currentFungibleId = 0;
     uint256 private _currentNonFungibleId = 1000000;
-
-    mapping(uint256 => uint256) private _supplies;
 
     constructor(
         string memory name_,
@@ -60,14 +58,6 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSea
 
     // ============ metadata ============
 
-    function totalSupply(uint256 tokenId) public view virtual returns (uint256) {
-        return _supplies[tokenId];
-    }
-
-    function exists(uint256 tokenId) public view virtual returns (bool) {
-        return MultiTokenTradable.totalSupply(tokenId) > 0;
-    }
-
     function setMetadataURI(string memory uri_) public virtual onlyRole(GOD) {
         _setURI(uri_);
     }
@@ -85,9 +75,7 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSea
         bytes memory data
     ) internal virtual returns (uint256) {
         _safeMint(initOwner, tokenId, initSupply, data);
-        _supplies[tokenId] = initSupply;
         _createToken(initOwner, tokenId);
-
         emit URI(uri(tokenId), tokenId);
         return tokenId;
     }
@@ -114,7 +102,6 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSea
     ) public virtual onlyRole(MINTER) {
         require(exists(tokenId), "MultiTokenTradable#mint: nonexistent token");
         _safeMint(to, tokenId, amount, data);
-        _supplies[tokenId] += amount;
     }
 
     function batchMint(
@@ -126,11 +113,7 @@ abstract contract MultiTokenTradable is MultiToken, RoleBased, Pausable, OpenSea
         for (uint256 i = 0; i < tokenIds.length; i++) {
             require(exists(tokenIds[i]), "MultiTokenTradable#mint: nonexistent token");
         }
-
         _safeBatchMint(to, tokenIds, amounts, data);
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            _supplies[tokenIds[i]] += amounts[i];
-        }
     }
 
     // ============ emergency ============
