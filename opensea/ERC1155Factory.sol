@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface OpenSeaFactoryERC1155 {
+interface OpenSeaERC1155Factory {
     function name() external view returns (string memory);
 
     function symbol() external view returns (string memory);

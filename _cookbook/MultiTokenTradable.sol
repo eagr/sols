@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../token/MultiTokenSupply.sol";
 import "../permission/RoleBased.sol";
 import "../security/Pausable.sol";
-import "../trade/OpenSeaInteroperable.sol";
+import "../opensea/Interoperable.sol";
 import "../lib/Uint.sol";
 
 /**
