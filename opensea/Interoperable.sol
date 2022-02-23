@@ -19,6 +19,7 @@ contract ProxyRegistry {
  */
 abstract contract OpenSeaInteroperable {
     string public name;
+    string public symbol;
     string public contractURI;
     address private _proxyRegistry;
 
@@ -28,6 +29,10 @@ abstract contract OpenSeaInteroperable {
 
     function _setName(string memory name_) internal {
         if (bytes(name_).length > 0) name = name_;
+    }
+
+    function _setSymbol(string memory symbol_) internal {
+        if (bytes(symbol_).length > 0) symbol = symbol_;
     }
 
     function _setContractURI(string memory uri) internal {
