@@ -1,14 +1,14 @@
 # sols
 
-a bunch of reusable Solidity contracts and libraries
+Solidity contract and library recipes
 
 ## Usage
-
-To use them, simply import them in your contract code.
 
 ```solidity
 import "https://github.com/eagr/sols/tree/master/util/QueryInterface.sol";
 ```
+
+⚠️ Do not use them in production code.
 
 ## License
 
